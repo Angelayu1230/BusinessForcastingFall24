@@ -1,0 +1,76 @@
+---
+title: "HW1:Importing and Playing with Excel File in R"
+author: "Qianyi Yu"
+date: "2024-09-18"
+output: html_document
+---
+
+# 
+## 
+### 
+#### 1. Import csv data and adding header row
+
+```{r}
+Typical_Employee_Survey_Data <-read.csv("~/Desktop/RBS/Business Forcasting/Typical_Employee_Survey_Data.csv", header=FALSE)
+colnames(Typical_Employee_Survey_Data) <- c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11")
+```
+#
+##
+###
+#### 2. 5-point summary and boxplot for each column
+
+```{r}
+#summary for each column
+summary(Typical_Employee_Survey_Data)
+```
+
+```{r}
+#boxplot for numerical columns
+boxplot(Typical_Employee_Survey_Data$V5)
+```
+
+#### 3. Convert the columns that need to be converted to Factors
+
+```{r}
+Typical_Employee_Survey_Data$V5 <- as.factor(Typical_Employee_Survey_Data$V5)
+```
+
+
+
+#### 4. Plot right visual for each column
+
+```{r}
+boxplot(Typical_Employee_Survey_Data$V1, main="Barplot for V1")
+hist(Typical_Employee_Survey_Data$V2, main="Barplot for V2")
+hist(Typical_Employee_Survey_Data$V3, main="Barplot for V3")
+hist(Typical_Employee_Survey_Data$V4, main="Barplot for V4")
+boxplot(Typical_Employee_Survey_Data$V5, main="Barplot for V5")
+hist(Typical_Employee_Survey_Data$V6, main="Barplot for V6")
+hist(Typical_Employee_Survey_Data$V7, main="Barplot for V7")
+hist(Typical_Employee_Survey_Data$V8, main="Barplot for V8")
+hist(Typical_Employee_Survey_Data$V9, main="Barplot for V9")
+hist(Typical_Employee_Survey_Data$V10, main="Barplot for V10")
+hist(Typical_Employee_Survey_Data$V11, main="Barplot for V11")
+```
+
+#### 5. Plot scatter plots to show few relationships
+
+```{r}
+#plotting column V1 and V5
+plot(Typical_Employee_Survey_Data$V1,Typical_Employee_Survey_Data$V5,main = "Scatter Plot of V1 vs V5",xlab = "V1",ylab = "V5",pch=19,col="blue")
+```
+
+
+```{r}
+#plotting column V3 and V6
+plot(Typical_Employee_Survey_Data$V2, Typical_Employee_Survey_Data$V6, main = "Scatter plot of V3 vs V6",xlab = "V6", ylab = "V3", pch = 19, col= "green")
+```
+
+
+```{r}
+#plotting multiple columns
+pairs(Typical_Employee_Survey_Data[, c("V1", "V5", "V6", "V3")], 
+      main = "Scatter Plot Matrix",
+      pch = 19, col = "red")
+```
+
