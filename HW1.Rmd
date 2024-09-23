@@ -12,7 +12,7 @@ output: html_document
 
 ```{r}
 Typical_Employee_Survey_Data <-read.csv("~/Desktop/RBS/Business Forcasting/Typical_Employee_Survey_Data.csv", header=FALSE)
-colnames(Typical_Employee_Survey_Data) <- c("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11")
+colnames(Typical_Employee_Survey_Data) <- c("Employee_age", "Gender", "Job_satisfaction", "Work_life_balance", "Career_opportunity", "Manager_support", "Team_dynamics", "Compensation_satisfaction", "Remote_work_support", "Personal_development", "Work_engagement")
 ```
 #
 ##
@@ -26,13 +26,13 @@ summary(Typical_Employee_Survey_Data)
 
 ```{r}
 #boxplot for numerical columns
-boxplot(Typical_Employee_Survey_Data$V5)
+boxplot(Typical_Employee_Survey_Data$Career_opportunity)
 ```
 
 #### 3. Convert the columns that need to be converted to Factors
 
 ```{r}
-Typical_Employee_Survey_Data$V5 <- as.factor(Typical_Employee_Survey_Data$V5)
+Typical_Employee_Survey_Data$Career_opportunity <- as.factor(Typical_Employee_Survey_Data$Career_opportunity)
 ```
 
 
@@ -40,36 +40,36 @@ Typical_Employee_Survey_Data$V5 <- as.factor(Typical_Employee_Survey_Data$V5)
 #### 4. Plot right visual for each column
 
 ```{r}
-boxplot(Typical_Employee_Survey_Data$V1, main="Barplot for V1")
-hist(Typical_Employee_Survey_Data$V2, main="Barplot for V2")
-hist(Typical_Employee_Survey_Data$V3, main="Barplot for V3")
-hist(Typical_Employee_Survey_Data$V4, main="Barplot for V4")
-boxplot(Typical_Employee_Survey_Data$V5, main="Barplot for V5")
-hist(Typical_Employee_Survey_Data$V6, main="Barplot for V6")
-hist(Typical_Employee_Survey_Data$V7, main="Barplot for V7")
-hist(Typical_Employee_Survey_Data$V8, main="Barplot for V8")
-hist(Typical_Employee_Survey_Data$V9, main="Barplot for V9")
-hist(Typical_Employee_Survey_Data$V10, main="Barplot for V10")
-hist(Typical_Employee_Survey_Data$V11, main="Barplot for V11")
+boxplot(Typical_Employee_Survey_Data$Employee_age, main="Barplot for Employee_age")
+hist(Typical_Employee_Survey_Data$Gender, main="Barplot for Gender")
+hist(Typical_Employee_Survey_Data$Job_satisfaction, main="Barplot for Job_satisfaction")
+hist(Typical_Employee_Survey_Data$Work_life_balance, main="Barplot for Work_life_balance")
+boxplot(Typical_Employee_Survey_Data$Career_opportunity, main="Barplot for Career_opportunity")
+hist(Typical_Employee_Survey_Data$Manager_support, main="Barplot for Manager_support")
+hist(Typical_Employee_Survey_Data$Team_dynamics, main="Barplot for Team_dynamics")
+hist(Typical_Employee_Survey_Data$Compensation_satisfaction, main="Barplot for Compensation_satisfaction")
+hist(Typical_Employee_Survey_Data$Remote_work_support, main="Barplot for Remote_work_support")
+hist(Typical_Employee_Survey_Data$Personal_development, main="Barplot for Personal_development")
+hist(Typical_Employee_Survey_Data$Work_engagement, main="Barplot for Work_engagement")
 ```
 
 #### 5. Plot scatter plots to show few relationships
 
 ```{r}
-#plotting column V1 and V5
-plot(Typical_Employee_Survey_Data$V1,Typical_Employee_Survey_Data$V5,main = "Scatter Plot of V1 vs V5",xlab = "V1",ylab = "V5",pch=19,col="blue")
+#plotting column Employee_age and Career_opportunity
+plot(Typical_Employee_Survey_Data$Employee_age,Typical_Employee_Survey_Data$Career_opportunity,main = "Scatter Plot of Employee_age vs Career_opportunity",xlab = "Employee_age",ylab = "Career_opportunity",pch=19,col="blue")
 ```
 
 
 ```{r}
-#plotting column V3 and V6
-plot(Typical_Employee_Survey_Data$V2, Typical_Employee_Survey_Data$V6, main = "Scatter plot of V3 vs V6",xlab = "V6", ylab = "V3", pch = 19, col= "green")
+#plotting column Job_satisfaction and Manager_support
+plot(Typical_Employee_Survey_Data$Gender, Typical_Employee_Survey_Data$Manager_support, main = "Scatter plot of Job_satisfaction vs Manager_support",xlab = "Manager_support", ylab = "Job_satisfaction", pch = 19, col= "green")
 ```
 
 
 ```{r}
 #plotting multiple columns
-pairs(Typical_Employee_Survey_Data[, c("V1", "V5", "V6", "V3")], 
+pairs(Typical_Employee_Survey_Data[, c("Employee_age", "Career_opportunity", "Manager_support", "Job_satisfaction")], 
       main = "Scatter Plot Matrix",
       pch = 19, col = "red")
 ```
