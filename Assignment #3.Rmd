@@ -1,0 +1,31 @@
+---
+title: 'Assignment #3'
+output: html_document
+author: "Qianyi Yu"
+date: "2024-09-29"
+---
+
+
+# 
+## 
+### 
+#### 1. Detailed description of the data
+##### Data Dictionary
+
+| **Variable Name** | **Description**                                                      | **Data Type** | **Units**          | **Missing Values** |
+|-------------------|----------------------------------------------------------------------|---------------|--------------------|--------------------|
+| Name              | The title of the game being tracked (e.g., Counter-Strike)           | String        | N/A                | N/A                |
+| Month             | The specific month when data was recorded                            | Date          | MMM-YY format      | N/A                |
+| Avg. Players      | The average number of players playing the game during that month     | Numeric       | Number of players  | NA (if not available) |
+| Gain              | The change in the number of average players compared to the previous month | Numeric   | Number of players  | NA (if not available) |
+| % Gain            | The percentage change in the number of players compared to the previous month | Numeric   | Percentage (%)     | NA (if not available) |
+| Peak Players      | The maximum number of players playing the game during the peak hour in that month | Numeric | Number of players  | NA (if not available) |
+
+This dataset includes monthly data on player counts, sales, revenue, and reviews for different games on the Steam platform. It captures how individual games perform over time in terms of engagement and financial situation.
+
+
+#### 2. Data Collection Methodology
+##### This dataset was likely gathered through the Steam API or similar web scraping tools. Data collection appears to have been automated on a monthly basis, capturing information such as player activity, game sales, and user reviews directly from the Steam platform. This process could have been conducted by third-party services or individuals aiming to monitor and analyze the performance trends of various games on Steam.
+
+#### 3. Why This Dataset Intrigues Me
+##### I find this dataset intriguing because it provides real-world insights into the gaming industry, particularly the relationship between game popularity, revenue, and user engagement. By analyzing this data, I can explore how different factors (like reviews or active player count) affect a game's commercial success over time. It also opens up the possibility to use forecasting models to predict future trends in game performance, which is highly relevant in today’s fast-paced entertainment industry.
