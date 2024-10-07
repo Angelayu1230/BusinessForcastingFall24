@@ -1,0 +1,111 @@
+---
+title: 'Assignment #4'
+author: "Qianyi Yu"
+date: "2024-10-06"
+output: html_document
+---
+
+# 
+## 
+### 
+#### 1. Importing and preparing my data
+```{r}
+#Import CSV file
+my_data <- read.csv("AllSteamData.csv", header = TRUE, stringsAsFactors = FALSE)
+# Filter out the row where the Month column contains "Last 30 Days"
+my_data_filtered <- my_data[my_data$Month != "Last 30 Days", ]
+#choosing Avg..Players of Counter-Strike game as my variable I will use in the following steps and also make sure the variable is numerical
+my_data_filtered <- my_data[my_data$Name == "Counter-Strike", ]
+my_data_filtered$Avg..Players <- as.numeric(my_data_filtered$Avg..Players)
+# Convert the Month column into a Date format (assuming the format is 'Mon-YY')
+my_data_filtered$Month <- as.Date(paste0("01-", my_data_filtered$Month), format = "%d-%b-%y")
+# Reverse the order of the data so the time series is in ascending order
+my_data_filtered <- my_data_filtered[order(my_data_filtered$Month), ]
+```
+
+#### 2. Trying different models
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+
+plot(my_data_filtered$Avg..Players)
+Acf(my_data_filtered$Avg..Players)
+```
+
+##### a) plot the time series
+```{r}
+#create the time series
+avg_players_ts <- ts(my_data_filtered$Avg..Players, start = c(2012, 7), frequency = 12)
+#plot the time series
+plot(avg_players_ts, main = "Counter-Strike Avg. Players Over Time", ylab = "Avg. Players", xlab = "Time")
+```
+
+##### b) Mean forecast
+```{r}
+mean_forecast <- meanf(avg_players_ts, h = 12)
+plot(mean_forecast)
+# The historical data shows a clear downward trend and the forecast average value assumes the future values will remain around the historical mean. The prediction interval highlights the uncertainty in the forecast.Since the data has a strong downward trend, this is not suitable as it doesn't capture the trend.
+```
+
+##### c) Naive Forecast
+```{r}
+naive_forecast <- naive(avg_players_ts, h = 12)
+plot(naive_forecast)
+# The prediction interval shows increasing uncertainty as time progresses. While this model captures the most recent value, it ignores trends or seasonality in the data, making it less ideal for this dataset.
+```
+
+##### d) Random Walk Forecast
+```{r}
+rwf_forecast <- rwf(avg_players_ts, h = 12)
+rwf_forecast_drift <- rwf(avg_players_ts, h = 12, drift = TRUE)
+plot(rwf_forecast)
+plot(rwf_forecast_drift)
+# Similar to the Naive method, the forecast is a flat line equal to the last observed point, with increasing uncertainty over time.
+```
+
+##### e) Seasonal Naive Forecast
+```{r}
+snaive_forecast <- snaive(avg_players_ts, h = 12)
+plot(snaive_forecast)
+# This is a model accounts for both the random fluctuations in the data and a consistent downward trend (drift). So this model is better suited for this data as it captures the downward trend, making it more accurate compared to the Mean or Naive forecasts.
+```
+
+##### f) Moving Averages
+```{r}
+MA5_forecast <- ma(avg_players_ts, order = 5)
+MA9_forecast <- ma(avg_players_ts, order = 9)
+plot(MA5_forecast)
+plot(MA9_forecast)
+# This forecast assumes that the value in each period will be the same as the value from the corresponding period last year. While the model captures some seasonal patterns, the data doesn’t show strong seasonality, so this model is not the best fit for this dataset, which trends downward over time.
+```
+
+#### 3. Plotting All Forecasts Together
+```{r}
+plot(avg_players_ts, main = "Counter-Strike: Time Series and Forecasts", xlab = "Time", ylab = "Avg. Players",col = "blue")
+lines(mean_forecast$mean, col = "red")
+lines(naive_forecast$mean, col = "green")
+lines(rwf_forecast$mean, col = "purple")
+lines(rwf_forecast_drift$mean, col = "orange")
+lines(snaive_forecast$mean, col = "black")
+lines(MA5_forecast, col = "pink")
+lines(MA9_forecast, col = "lightblue")
+```
+
+#### 5. Pick an accuracy measure
+```{r}
+accuracy_mean <- accuracy(mean_forecast)
+accuracy_naive <- accuracy(naive_forecast)
+accuracy_rwf <- accuracy(rwf_forecast)
+accuracy_rwf_drift <- accuracy(rwf_forecast_drift)
+accuracy_snaive <- accuracy(snaive_forecast)
+
+print(accuracy_mean)
+print(accuracy_naive)
+print(accuracy_rwf)
+print(accuracy_rwf_drift)
+print(accuracy_snaive)
+```
+
+#### Based on the accuracy measures, the Random Walk with Drift model had the lowest RMSE and MAE, indicating that it performs best on this dataset. The Naive Forecast and Random Walk models came in second with similar results. Given that the data does not exhibit strong seasonality, the Random Walk with Drift model captures the underlying trend better, making it the most suitable for forecasting the average players of Counter-Strike.
