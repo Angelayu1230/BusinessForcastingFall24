@@ -1,0 +1,65 @@
+---
+title: "Assignment #5"
+author: "Qianyi Yu"
+date: "10/11/2024"
+output: html_document
+---
+
+# 
+## 
+### 
+#### 1. Importing and preparing my data
+
+```{r}
+library(fpp)
+library(fpp2)
+
+#Import the data
+mydata <- read.csv("/Users/angela1230/Desktop/Walmart_Sales.csv")
+
+#Convert the date into correct format
+mydata$Date <- as.Date(mydata$Date, format="%d-%m-%Y")
+
+#Filter the data for only store 1
+store1_sales <- mydata[mydata$Store == 1, ]
+
+#Sort the data in acending order
+store1_sales <- store1_sales[order(store1_sales$Date, decreasing = FALSE), ]
+```
+
+#### 2. Creating Time Series and decomposition for Sales
+```{r}
+#Create time series
+store1_sales_ts <- ts(store1_sales$Weekly_Sales, start = c(2010,2), frequency = 52)
+
+#Plot time series
+plot(store1_sales_ts)
+
+#STL decomposition
+stl_decomp <- stl(store1_sales_ts, s.window = "periodic")
+
+#Plot STL decomposition
+plot(stl_decomp)
+attributes(stl_decomp)
+
+#Print out seasonal adjustment
+seasadj(stl_decomp)
+
+#Plot line on graph
+plot(store1_sales_ts)
+lines(seasadj(stl_decomp), col="red")
+
+#Forecast using the STL decomposition
+f_stl <- forecast(stl_decomp)
+f_stl
+plot(f_stl)
+
+#Other way of decomposition
+decomp_store1_sales <- decompose(store1_sales_ts)
+plot(decomp_store1_sales)
+attributes(decomp_store1_sales)
+seasadj(decomp_store1_sales)
+plot(store1_sales_ts)
+lines(seasadj(decomp_store1_sales), col="blue")
+```
+
