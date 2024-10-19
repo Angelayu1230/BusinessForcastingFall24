@@ -1,0 +1,100 @@
+---
+title: "Assignment MP1"
+author: "Qianyi Yu"
+date: "10/19/2024"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+#Import dataset
+mydata <- read.csv("~/Desktop/flightVolume.csv")
+```
+
+```{r}
+#1. create a time series
+mydata_ts <- ts(mydata$reslong,frequency = 12)
+```
+
+```{r}
+#2. Verify how much history to include
+plot(mydata_ts, main = "Departure Time Series", ylab = "Departures", xlab = "Time")
+```
+
+#### With the Departure Time Series plot, I decide to include all history data. The plot shows an increasing trend with higher variability starting around the middle of the series, and this suggests that more recent data might have different seasonaly patterns than the earlier periods.
+```{r}
+#3. Hypothesize trend, seasonality, or both
+# Based on the time series plot, I hypothesize that the data shows both trend and seasonality. Trend is indicated by the upward movement in departures over time and the seasonality is indicated from the regular cyclical patters with the consistent peaks in fixed intervals, and this shows the departures fluctuate periodically.
+```
+
+```{r}
+#4. Verify using Acf
+acf(mydata_ts)
+```
+
+####  This ACF suggests the current value is highly correlated with previous period and means the recent history plays an important role in predicting the future. The peaks in the graph in a regular intervals suggests there are some trend and seasonality in the data, as suggested by the decomposition.
+```{r}
+#5. Verify using decomposition
+decomp <- decompose(mydata_ts)
+plot(decomp)
+```
+
+#### The decomposition of the departure time series shows trend and seasonality in the data. The trend component indicates a steady increase from time 10 to 30. The seasonal component shows a repeating pattern, and indictes the departures vary in a regular, cyclical manner. 
+```{r}
+#6. Chose an accuracy measure
+# I will choose MAPE (Mean Absolute Percentage Error) as the accuracy measure. It is a commonly used metric that measures the accuracy of predicted values by calculating the percentage difference between the predicted and actual values and it is easy to interpret and is used in many forecasting tasks.
+```
+
+
+```{r}
+#7. Create a forecast model
+#a) Naive model
+naive_forecast <- naive(mydata_ts, h = 12)
+plot(naive_forecast)
+#b)Average model
+mean_forecast <- meanf(mydata_ts, h = 12)
+plot(mean_forecast)
+#c)Exponential Smoothing
+ets_model <- ets(mydata_ts)
+ets_forecast <- forecast(ets_model, h = 12)
+plot(ets_forecast)
+#d)Holt-Winters Model
+hw_forecast <- HoltWinters(mydata_ts)
+hw_pred <- forecast(hw_forecast, h = 12)
+plot(hw_pred)
+#e)Decomposition Forecast
+stl_model <- stl(mydata_ts, s.window = "periodic")
+stl_forecast <- forecast(stl_model, h = 12)
+plot(stl_forecast)
+```
+```{r}
+#8. Show model rank with accuracy measures
+accuracy_naive <- accuracy(naive_forecast)
+accuracy_mean <- accuracy(mean_forecast)
+accuracy_ets <- accuracy(ets_model)
+accuracy_hw <- accuracy(hw_pred)
+accuracy_stl <- accuracy(stl_forecast)
+
+print(accuracy_naive)
+print(accuracy_mean)
+print(accuracy_ets)
+print(accuracy_hw)
+print(accuracy_stl)
+```
+
+```{r}
+#9. Choose which models and how are you going to use them for Forecasting
+# I would choose Exponential Smoothing Model as the primary forecasting model since it has the lowest RMSE and MAPE values. Holt-Winters and STL models, which also produced similar forecasts.
+```
+
+```{r}
+#10. Provide the forecast for the next 12 months
+ets_model <- ets(mydata_ts)
+ets_forecast <- forecast(ets_model, h = 12)
+plot(ets_forecast, main = "Final Forecast for Next 12 Months")
+print(ets_forecast)
+```
+
+#### Based on the Exponential Smoothing Model, which has the lowest MAPE and RMSE among the tested models, so I'm confident the forecast number of departures for the next 12 months is provided in the plot. The time series shows both trend and seasonality and the Exponential Smoothing Model also capture these characteristics. What's more, the predicted values show reasonable patterns and trends from the historical data. 
