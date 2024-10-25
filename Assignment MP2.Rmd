@@ -1,0 +1,98 @@
+---
+title: "Assignment MP2"
+author: "Qianyi Yu"
+date: "10/23/2024"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+# 1. create timeseries
+mydata <- read.csv("~/Desktop/insurance.csv")
+```
+
+```{r}
+# 2. verfy how much history to include
+insurance_ts <- ts(mydata$Quotes, start = c(2002,1), frequency = 12)
+plot(insurance_ts, main = "quotes Time Series", ylab = "quotes", xlab = "Time")
+```
+
+#### For future prediction, I would use all history data to best indicate the future trends. With time series data, I will use all data to provide more relible forecasting for seasonality and trend.
+
+```{r}
+# 3. Hypothesize trend, seasonality, or both
+# Based on the time series plot, the data may have both trend and seasonality. This plot seems to have some upward trends with some peaks and troughts, which also indicates possible seasonal behavior or cyclinc patterns, and the over all trend is increasing. 
+```
+
+
+```{r}
+# 4. verify with acf
+acf(insurance_ts)
+```
+
+#### The ACF plot shows that there is short-term dependence for lag 1 and lag 2. Beyond that, the autocorrelation becomes weak and insignificant, which means that the data further back in time do not influence the current value very much.
+
+```{r}
+#5. Verify using decomposition
+decomp <- decompose(insurance_ts)
+plot(decomp)
+```
+
+#### The decomposition shows that this data contains both trend and seasonality yet some random fluctuations are still remained. There is a big upward trend starting around 2003, continuing until 2005. And there are repeated seasonal patterns in the data. This suggests that forecasting model, such as Holt-Winters or decomposition-based models, can be used to forecast this data.
+
+```{r}
+#6. Chose an accuracy measure
+# I will choose MAE (Mean Absolute Error) as the accuracy measure. It is good for general accuracy comparisons since it equally weighs all errors.
+```
+
+```{r}
+#7. Create a forecast model
+#a) Naive model
+naive_forecast <- naive(insurance_ts, h = 12)
+plot(naive_forecast)
+#b)Average model
+mean_forecast <- meanf(insurance_ts, h = 12)
+plot(mean_forecast)
+#c)Exponential Smoothing
+ets_model <- ets(insurance_ts)
+ets_forecast <- forecast(ets_model, h = 12)
+plot(ets_forecast)
+#d)Holt-Winters Model
+hw_forecast <- HoltWinters(insurance_ts)
+hw_pred <- forecast(hw_forecast, h = 12)
+plot(hw_pred)
+#e)Decomposition Forecast
+stl_model <- stl(insurance_ts, s.window = "periodic")
+stl_forecast <- forecast(stl_model, h = 12)
+plot(stl_forecast)
+```
+```{r}
+#8. Show model rank with accuracy measures
+accuracy_naive <- accuracy(naive_forecast)
+accuracy_mean <- accuracy(mean_forecast)
+accuracy_ets <- accuracy(ets_model)
+accuracy_hw <- accuracy(hw_pred)
+accuracy_stl <- accuracy(stl_forecast)
+
+print(accuracy_naive)
+print(accuracy_mean)
+print(accuracy_ets)
+print(accuracy_hw)
+print(accuracy_stl)
+```
+```{r}
+#9. Choose which models and how are you going to use them for Forecasting
+# I would choose Decomposition Model as the primary forecasting model since it has the lowest MAE values.
+```
+
+```{r}
+#10. Provide the forecast for the next 12 months
+stl_model <- stl(insurance_ts, s.window = "periodic")
+stl_forecast <- forecast(stl_model, h = 12)
+plot(stl_forecast, main = "Final Forecast for Next 12 Months")
+print(stl_forecast)
+```
+
+#### The decomposition has the lowest error rates, and the forecast has clear seasonal and trend patters. These makes the decomposition model a confident choice for forecasting the next 12 months. The forecasted points also give a clear prediction, while considered uncertainty at the same time, giving the predictions reliable for decision-making.
