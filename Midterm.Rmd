@@ -1,0 +1,159 @@
+---
+title: "Midterm"
+author: "Qianyi Yu"
+date: "11/4/2024"
+output: html_document
+---
+
+```{r}
+#1. Import data
+library(fpp)
+library(fpp2)
+mydata <- read.csv("~/desktop/sales-2.csv",header = FALSE)
+colnames(mydata) <- c("date", "sales")
+mydata$date <- as.Date(mydata$date, format = "%m/%d/%y")
+```
+
+```{r}
+#2. Plot and Inference
+sales_ts <- ts(mydata$sales, start = c(2020,1), frequency = 12)
+plot(sales_ts, main = "Time series for sales", ylab = "sales")
+```
+
+##### Summary: The time series plot shows a upwards seasonal trends with increasing volatility. 
+
+```{r}
+#3. Central Tendency
+summary(mydata$sales)
+boxplot(mydata$sales, main = "Boxplots for sales", ylab = "sales")
+```
+
+##### Summary: The min is 1322, the max is 22397, the mean is 8753, the median is 7246, the 1st quartile is 2892, and the 3rd quatile is 14346. The summarize stats and box plots shows that the sales is increasing over time and has a higher volatility in recent periods. The maximum value and the 3rd quatile value is much larger thant the median value indicates the recent values are larger than the previous.
+
+```{r}
+#4. Decomposition
+decomp <- decompose(sales_ts)
+plot(decomp)
+
+seasonal_indices <- stl_decomp$seasonal
+print(seasonal_indices)
+
+seasadj(decomp)
+plot(sales_ts)
+lines(seasadj(decomp), col = "blue")
+```
+
+##### The seasonal conponent trend in decomposition shows repeating patterns, thus the time series is seasonal. The decomposition is additive shown in the title of the graph. The seasonal monthly indices are printed and June is the time series value high, January is the time series value low. The possible reason for June might be it's the start of summer, people might stokcing medicine for alergies or other summer-related health needs. For January, people may have already stock enough medicine at the end of the year. The seasonality have big fluctuations in the value of time series. 
+
+```{r}
+#5. Naive Method
+naive_forecast <- naive(sales_ts, h = 12)
+plot(naive_forecast)
+
+#plot residual: shows increasing variability, especially in the last several periods. The patterns show that this method may not be able to capture the sales data's increasing trend, and which lead to a larger redisual over time.
+plot(naive_forecast$residuals, main="Residuals of Naïve Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: residuals are centered around zero, but skewed toward the positive side. This means that the predicted values are underestimated than the actual values. 
+hist(naive_forecast$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: this plot shows the residuals increase with the fitted values. The naïve method is not capturing the trend.
+plot(fitted(naive_forecast), naive_forecast$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals: The residuals is increasing with the actual values, showing naïve method is not capturing the trends.
+plot(sales_ts, naive_forecast$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: There are some significant autocorrelations for certain lags. This means naïve method does not capture all patterns in the data.
+Acf(naive_forecast$residuals, main="ACF of Residuals")
+
+#five measures of accuracy: the high RMSE and MAPE values shows the naïve method is not very accuracy. 
+accuracy(naive_forecast)
+
+#forecast: the forecast for the next year stay the same as the last observed value. This method does not capture the increasing trends and seasonality, it's forecast will result in errors.
+plot(naive_forecast, main="Naïve Forecast for Next Year", xlab="Time", ylab="Sales")
+```
+
+```{r}
+#6. Simple moving averages: increasing the moving average order will smooth out the fluctuations and will shows a clearer long-term trend. But it will also bring a lag in reactions of the predictions.
+plot(sales_ts)
+lines(ma(sales_ts, order=3), col="red")   
+lines(ma(sales_ts, order=6), col="blue") 
+lines(ma(sales_ts, order=9), col="green")
+
+```
+
+```{r}
+#7. simple smoothing: the value of alpha is 0.113, the model gives more weight to the past observations; the value of the initial state is 1317.1418, ; the value of sigma is 0.1961, and the lower the sigma is, the better the model fit with the data.
+ets_model <- ets(sales_ts)
+summary(ets_model)
+ets_forecast <- forecast(ets_model, h = 12)
+plot(ets_forecast)
+
+#plot residual: shows the variation increase over time. this model may not be capturing the trend.
+plot(ets_forecast$residuals, main="Residuals of Simple Smoothing Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: Most residuals centered around zero, and roughly shows a normal distribution, this means the methods might be a good fit with small error.
+hist(ets_forecast$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: the residuals are scattered randomly, so the model fit well.
+plot(fitted(ets_forecast), ets_forecast$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals: the residuals is scattered randomly around zero and shows the model fit well.
+plot(sales_ts, ets_forecast$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: this plot shows no significant autocorrelations which means the model has describe all of the patterns in the data. 
+Acf(ets_forecast$residuals, main="ACF of Residuals")
+
+#5 measures of accuracy: the accuracy shows a relatively low ME and moderate RMSE and MAE. The predicted value for time series will decrease in one year. The residual analysis shows the model has capture the patterns and with no significant autocorrelations. So this method could predict the future values.
+accuracy(ets_forecast)
+
+```
+
+```{r}
+#8. Holt-Winters: the value of alpha is 
+hw_forecast <- HoltWinters(sales_ts)
+summary(hw_forecast)
+hw_pred <- forecast(hw_forecast, h = 12)
+plot(hw_pred)
+
+#plot residual: this plot shows the residuals are random plotted around zero, which means this method has capture most the patterns.
+plot(hw_pred$residuals, main="Residuals of Simple Smoothing Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: this plot shows a bell-shape, which indicated the residual is normally distributed and might be a well-fitted model.
+hist(hw_pred$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: residuals scattered around zero with no obvious patterns, indicating a good model.
+plot(fitted(hw_pred), hw_pred$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals: the residuals are spread around zero with no signifiant patterns, shows the residuals are random.
+plot(sales_ts, hw_pred$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: no significant autocorrelations. 
+Acf(hw_pred$residuals, main="ACF of Residuals")
+
+#5 measures of accuracy: based on the accuracy measures, the model looks very accurate since it has capture most of the patterns. 
+accuracy(hw_pred)
+```
+
+```{r}
+#9. Accuracy Summary
+accuracy_naive <- accuracy(naive_forecast)
+accuracy_ets <- accuracy(ets_forecast)
+accuracy_hw <- accuracy(hw_pred)
+
+print(accuracy_naive)
+print(accuracy_ets)
+print(accuracy_hw)
+```
+
+##### Naïve method has the highest RMSE and MAP shows it will be less accurate. and the holt-winters methods has the lowest RMSE and MAPE shows it is the most accurate model. The simple smoothing method could be a back up it a seasonality needs to be higlights. 
+```{r}
+#10. Conclusion
+#The time series shows a slightly downward trends so it will have slightly decrease with periodically seasonal variability. Both simple smoothing and holt-winters method could be the model of this dataset and better for future predictions. 
+```
+
