@@ -35,7 +35,7 @@ boxplot(mydata$sales, main = "Boxplots for sales", ylab = "sales")
 decomp <- decompose(sales_ts)
 plot(decomp)
 
-seasonal_indices <- stl_decomp$seasonal
+seasonal_indices <- decomp$seasonal
 print(seasonal_indices)
 
 seasadj(decomp)
