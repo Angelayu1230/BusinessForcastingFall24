@@ -151,7 +151,7 @@ print(accuracy_ets)
 print(accuracy_hw)
 ```
 
-##### Naïve method has the highest RMSE and MAP shows it will be less accurate. and the holt-winters methods has the lowest RMSE and MAPE shows it is the most accurate model. The simple smoothing method could be a back up it a seasonality needs to be higlights. 
+##### Naïve method has the highest RMSE and MAP shows it will be less accurate. and the simple smoothing methods has the lowest ME and MAPE shows it is the most accurate model. The holt-winters method could be a back up it a seasonality needs to be higlights. 
 ```{r}
 #10. Conclusion
 #The time series shows a slightly downward trends so it will have slightly decrease with periodically seasonal variability. Both simple smoothing and holt-winters method could be the model of this dataset and better for future predictions. 
