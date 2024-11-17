@@ -1,0 +1,66 @@
+---
+title: "Assignment #6"
+author: "Qianyi Yu"
+date: "11/16/2024"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+
+#Import the data
+mydata <- read.csv("/Users/angela1230/Desktop/Walmart_Sales.csv")
+
+#Convert the date into correct format
+mydata$Date <- as.Date(mydata$Date, format="%d-%m-%Y")
+
+#Filter the data for only store 1
+store1_sales <- mydata[mydata$Store == 1, ]
+
+#Sort the data in ascending order
+store1_sales <- store1_sales[order(store1_sales$Date, decreasing = FALSE), ]
+
+plot(store1_sales$Temperature, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Temperature", ylab="Weekly Sales")
+plot(store1_sales$Fuel_Price, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Fuel Price", ylab="Weekly Sales")
+plot(store1_sales$CPI, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="CPI", ylab="Weekly Sales")
+plot(store1_sales$Unemployment, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Unemployment", ylab="Weekly Sales")
+
+#perform regression model
+lm_temp <- lm(store1_sales$Weekly_Sales ~ store1_sales$Temperature)
+lm_fuel <- lm(store1_sales$Weekly_Sales ~ store1_sales$Fuel_Price)
+lm_cpi <- lm(store1_sales$Weekly_Sales ~ store1_sales$CPI)
+lm_unemp <- lm(store1_sales$Weekly_Sales ~ store1_sales$Unemployment)
+
+#plot regression lines
+plot(store1_sales$Temperature, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Temperature", ylab="Weekly Sales")
+lines(store1_sales$Temperature, lm_temp$fitted.values, col="red", lwd=3)
+
+plot(store1_sales$Fuel_Price, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Fuel Price", ylab="Weekly Sales")
+lines(store1_sales$Fuel_Price, lm_fuel$fitted.values, col="red", lwd=3)
+
+plot(store1_sales$CPI, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="CPI", ylab="Weekly Sales")
+lines(store1_sales$CPI, lm_cpi$fitted.values, col="red", lwd=3)
+
+plot(store1_sales$Unemployment, store1_sales$Weekly_Sales, pch=19, col="blue", xlab="Unemployment", ylab="Weekly Sales")
+lines(store1_sales$Unemployment, lm_unemp$fitted.values, col="red", lwd=3)
+
+#Model Acceptance Steps
+summary(lm_temp)
+summary(lm_fuel)
+summary(lm_cpi)
+summary(lm_unemp)
+```
+
+#### Based on the R-square values and the p-values, CPI appears to be the best predictor for the weekly sales for walmart store 1. CPI has the highest r-square value of 5.08% and a significant p-value of 0.00679. 
+
+```{r}
+#Residual Analysis for CPI
+par(mfrow=c(2, 2))
+plot(lm_cpi)
+smoothScatter(store1_sales$CPI, lm_cpi$residuals, xlab="CPI", ylab="Residuals", main="Residuals vs CPI")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+#### The CPI predicator shows weak explaination power, the r-square value is 5% showing a limited ability to predict weekly sales. The residual analysis shows issues with non-linearity, heteroscedasticity, and deviations from normality, suggesting that the model does not fully capture the underlying relationship. Some points could affecting the model's accuracy. Addressing these issues through data transformation or exploring non-linear modeling could potentially improve the model's performance.
+  
