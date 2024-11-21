@@ -1,0 +1,47 @@
+---
+title: "ARIMA"
+author: "Qianyi Yu"
+date: "11/20/2022"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(forecast)
+
+mydata <- read.csv("/Users/angela1230/Desktop/Walmart_Sales.csv")
+mydata$Date <- as.Date(mydata$Date, format="%d-%m-%Y")
+store1_sales <- mydata[mydata$Store == 1, ]
+store1_sales <- store1_sales[order(store1_sales$Date, decreasing = FALSE), ]
+
+store1_sales_ts <- ts(store1_sales$Weekly_Sales, start = c(2010,2), frequency = 52)
+plot(store1_sales_ts)
+ndiffs(store1_sales_ts)
+tsdisplay(store1_sales_ts)
+sales_diff1 <- diff(store1_sales_ts, differences = 1)
+plot(sales_diff1)
+tsdisplay(sales_diff1)
+auto_fit <- auto.arima(store1_sales_ts, trace=TRUE, stepwise = FALSE)
+auto_fit
+attributes(auto_fit)
+
+#Perform and Plot the forecast for the next five periods
+plot(forecast(auto_fit,h=5,level=c(99.5)))
+
+#Residual analysis
+Acf(auto_fit$residuals)
+Box.test(residuals(auto_fit), lag=20, type="Ljung")
+plot.ts(residuals(auto_fit))
+hist(auto_fit$residuals)
+par(mfrow = c(1, 1))
+tsdiag(auto_fit)
+accuracy_metrics <- accuracy(auto_fit)
+print(accuracy_metrics)
+
+```
+
+```{r}
+#1. Explain the ARIMA output: the fitted model is ARIMA(0,0,0)(0,1,0)[52] with drift. This shows that the non-seasonal part of the model has no AR or MA terms since the p and q equal to 0. But there is a seasonal difference since D equal to 1 and this shows a annually seasonality. The fitted model includes a drift term so that levels trend linearly over time. The drift coefficient is 1128.6438 shows a strong trend in data. 
+```
+
