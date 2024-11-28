@@ -1,0 +1,94 @@
+---
+title: "Business Forecast Project"
+author: "Qianyi Yu"
+date: "11/16/2024"
+output: html_document
+---
+
+```{r}
+library(fpp)
+library(fpp2)
+library(TTR)
+library(forecast)
+
+#1.import data
+mydata <- read.csv("/Users/angela1230/Desktop/animalshelterdata.csv")
+mydata <- mydata[order(mydata$IntakeDate, decreasing = FALSE),]
+filtered_data <- mydata[mydata$IntakeCondition != "DEAD", ]
+
+#counting the daily animal intake amount
+daily_intake <- aggregate(filtered_data$AnimalID ~ filtered_data$IntakeDate, FUN = length)
+colnames(daily_intake) <- c("IntakeDate", "Count")
+
+#2. Data overview
+str(mydata)
+summary(mydata)
+daily_intake$IntakeDate <- as.Date(daily_intake$IntakeDate, format = "%Y-%m-%d")
+plot(daily_intake$IntakeDate, daily_intake$Count, type = "l", col = "blue",
+     main = "Daily Intake Trends", xlab = "Date", ylab = "Number of Intakes")
+type_summary <- aggregate(mydata$AnimalID ~ mydata$IntakeType, FUN = length)
+colnames(type_summary) <- c("IntakeType", "Count")
+percentages <- round(type_summary$Count / sum(type_summary$Count) * 100, 1)
+
+# Combine IntakeType and percentages for labels
+labels <- paste(type_summary$IntakeType, "-", percentages, "%")
+
+# Pie Chart with Percentages
+pie(type_summary$Count, 
+    labels = labels, 
+    main = "Distribution of Animals by Intake Type", 
+    col = rainbow(length(type_summary$Count)))
+
+#3. performing time series and decomposition
+daily_intake_ts <- ts(daily_intake$Count, start = c(2022,1), frequency = 365)
+weekly_intake_ts <- ts(daily_intake$Count, start = c(2022,1), frequency = 52)
+plot(daily_intake_ts, xlab = "Date",
+     ylab = "Animal Intake Count",
+     main = "Animal Intake Time Series")
+plot(weekly_intake_ts, xlab = "Date",
+     ylab = "Animal Intake Count",
+     main = "Animal Intake Time Series")
+
+decomp <- stl(weekly_intake_ts, s.window = "periodic")
+plot(decomp, main = "Decomposition of Weekly Animal Intake")
+
+#4. using different forecasting methods (with residuals)
+#a. naïve and mean forecast
+naive_forecast <- naive(daily_intake_ts, h = 104)
+mean_forecast <- meanf(daily_intake_ts, h = 104)
+plot(naive_forecast, main = "Naïve Forecast")
+plot(mean_forecast, main = "Mean Forecast")
+
+#b. Seasonal Naive Forecast
+snaive_forecast <- snaive(daily_intake_ts, h = 104)
+plot(snaive_forecast, main = "Seasonal Naïve Forecast")
+
+#c. ETS
+ets_model <- ets(daily_intake_ts)
+ets_forecast <- forecast(ets_model, h = 104)
+plot(ets_forecast, main = "ETS Forecast")
+
+#d. ARIMA
+auto_fit <- auto.arima(daily_intake_ts, trace=TRUE, stepwise=FALSE)
+arima_forecast <- forecast(auto_fit, h = 104)
+plot(arima_forecast, main = "ARIMA Forecast")
+
+#Residual Analysis
+residual_analysis <- function(forecast_model, name){
+  checkresiduals(forecast_model)
+  Acf(residuals(forecast_model), main = paste("Acf of Residuals of", name))
+  Box.test(residuals(forecast_model), lag=20, type="Ljung")
+  plot.ts(residuals(forecast_model), main = paste("Residual plots for", name))
+  hist(residuals(forecast_model), main = paste("Histogram of residual for", name),
+                                               col = "blue", xlab = "Residuals")
+  accuracy_metric <- accuracy(forecast_model)
+  print(accuracy_metric)
+}
+
+residual_analysis(naive_forecast, "Naive Forecast")
+residual_analysis(mean_forecast, "Mean Forecast")
+residual_analysis(snaive_forecast, "Seasonal Naive Forecast")
+residual_analysis(ets_forecast, "Exponential Smoothing Forecast")
+residual_analysis(arima_forecast, "ARIMA forecast")
+```
+
