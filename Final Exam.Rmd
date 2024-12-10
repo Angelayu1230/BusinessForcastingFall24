@@ -1,0 +1,214 @@
+---
+title: "Final Exam"
+author: "Qianyi Yu"
+date: "12/09/2024"
+output: html_document
+---
+
+```{r}
+#1. Import data
+library(UsingR)
+library(forecast)
+library(fpp)
+library(lmtest)
+library(MASS)
+mydata <- read.csv("/Users/angela1230/Desktop/TOTALSA.csv")
+```
+
+
+```{r}
+#2. Plot and Inference
+sales_ts <- ts(mydata$Sales.Units.in.Millions., start = c(2019,01), frequency = 12)
+plot(sales_ts, main = "Time series for car sales", ylab = "sales")
+```
+
+##### Summaryof times series: The time series plot shows significant car sales drop around the first quarter of 2020 and which is probably due to the external shock of the COVID-19 pandemic. After the drop, there is a quick recovery in sales. And the trend gradually increase from 2022 to 2024, showing a steady rcovery and growth in car sales.
+
+```{r}
+#3. Central Tendency: the min is 8.944, max is 18.697, mean is 15.612, median is 15.938, 1st quartile is 14.189, and 3rd quartile is 16.966 for the times series. 
+summary(sales_ts)
+boxplot(sales_ts, main="Box Plot of Car Sales", ylab="Sales")
+```
+
+##### Summary observation of box plot: the summary stats shows a slightly skewed distribution. the minimum value is the drop in 2020 and the maximum value is the peak of the quick recovery of sales. In the box plot, there is one clear outlier, which is the drop in the times series plot and the minimum value in the summary stats. 
+
+```{r}
+#4. Decomposition
+decomp <- decompose(sales_ts)
+plot(decomp)
+decomp$seasonal
+seasadj(decomp)
+plot(sales_ts)
+lines(seasadj(decomp), col = "blue")
+```
+
+##### Summary: The decomposition plot shows a clear seasonality. The decomposition is additive as the plot title shown. The seasonal monthly indices shows the car sales is highest in January, which is around 0.72. And the lowest is in April, which is around -0.51. This may cause by the discount that the dealerships may need to sale the car of last year's model. After holiday season and after that the consumer don't need to buy more cars, and there is no better discount so the sales are getting lower during spring. The seasonally adjusted series shows a smoother pattern and does not have big fluctuations to the value of times series. 
+
+```{r}
+#5. Naive Method
+naive_forecast <- naive(sales_ts, h = 12)
+plot(naive_forecast)
+
+#plot residual: the residuals plot shows a random fluctuations around zero, which means there is no clear trend but some variability, like the one in 2020.
+plot(naive_forecast$residuals, main="Residuals of Naïve Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: it shows the residuals are mostly centered around zero but seems slightly skewed and has outliers.
+hist(naive_forecast$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: it shows that there is no strong patter in naive method.
+plot(fitted(naive_forecast), naive_forecast$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals: this shows a similar variability with the fitted value plots but with a higher deviations in the period of the extreme values in 2020.
+plot(sales_ts, naive_forecast$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: this plot shows a weak autocorrelation for some lags and this means the naive method's dependencies does not fully take into account.
+Acf(naive_forecast$residuals, main="ACF of Residuals")
+
+#five measures of accuracy: The MAPE shows that the forecast errors are about 5.48% of the acutal values. However, the ACF1=0.0707 shows the naive method does not fully capture the patterns in the data.
+accuracy(naive_forecast)
+
+#forecast: the forecast for the next year stay the same as the last observed value.
+plot(naive_forecast, main="Naïve Forecast for Next Year", xlab="Time", ylab="Sales")
+print(naive_forecast)
+
+```
+
+```{r}
+#6. Simple Moving Averages: as the order increase, the plot becomes smoother and reduce the short-term fluctuations and noise in the data. The higher-order ma capture the trend more effectively. But the lower-order ma can capture the recent changes in times series.
+plot(sales_ts)
+lines(ma(sales_ts, order=3), col="red")   
+lines(ma(sales_ts, order=6), col="blue") 
+lines(ma(sales_ts, order=9), col="green")
+forecast_ma <- forecast(ma(sales_ts, order=6), h=12)
+plot(forecast_ma)
+```
+
+```{r}
+#7. simple smoothing: the value of alpha is 0.999. which means the model take the most recent data highly relevant for forecasting. The initial state value is 16.9716 and the sigma value is 1.1941. which signify the standard deviation of the residuals.
+ets_model <- ets(sales_ts)
+summary(ets_model)
+ets_forecast <- forecast(ets_model, h = 12)
+plot(ets_forecast)
+
+#plot residual: residual plot shows a random fluctuation around zero with some large deviations, like the on in 2020.
+plot(ets_forecast$residuals, main="Residuals of Simple Smoothing Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: it shows the residuals are approximately centerned around zero but are not entirely normal because of the outliers and skewness. 
+hist(ets_forecast$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: there is no clear pattern in this model.
+plot(fitted(ets_forecast), ets_forecast$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals: it shows the uneven variability with higer residuals for certain actual values. This shows the model will perform poorly in the periods that have significant changes.
+plot(sales_ts, ets_forecast$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: It shows a weak autocorrelatiosn in residuals for some lags, this means the model's dependencies does not fully been captured.
+Acf(ets_forecast$residuals, main="ACF of Residuals")
+
+#forecast
+plot(ets_forecast)
+print(ets_forecast)
+
+#5 measures of accuracy: the model's MAPE is 5.39%, which measn the forecast errors are relatively small compared to the actual values. but the acf1 = 0.0708 shows the model are not addressing the temporal dependencies.It works well with stable series.
+accuracy(ets_forecast)
+
+```
+
+```{r}
+#8. Holt-Winters: the alpha value is 1 and it means the most recent observation is used to predict. The beta is 1 and it signifies the trend is highly related to the recent data. the gamma is 1 and it means the seasonal component adjustment is entirely based on the lastest seasonal patter. the value of sigma is approximately 1.1941 and it is signifies the standard deviation of the residuals. 
+hw_forecast <- HoltWinters(sales_ts)
+summary(hw_forecast)
+hw_pred <- forecast(hw_forecast, h = 12)
+plot(hw_pred)
+
+#plot residual: it shows the variability over time and with some spikes. this shows a certain patterns or outliers may not been captured entirely by the model.
+plot(hw_pred$residuals, main="Residuals of Simple Smoothing Forecast", ylab="Residuals", xlab="Time")
+
+#histogram plot for residual: it shows an approximately distribution around zero with some skewness and outliers.
+hist(hw_pred$residuals, main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: this shows that the model has no significant bias in the forecast and some variability in residuals could be fixed.
+plot(fitted(hw_pred), hw_pred$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals:it shows no clear relationship between the acutal calues and residuals. this means the model captures the main trend of the data.
+plot(sales_ts, hw_pred$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: it shows some significant lags and means there might still be autocorrelation in the residuals.
+Acf(hw_pred$residuals, main="ACF of Residuals")
+
+#forecast
+plot(hw_pred)
+print(hw_pred)
+
+#5 measures of accuracy: the MAPE shows that 9.14% of the forecasting average error is less than the actual value.
+accuracy(hw_pred)
+```
+
+```{r}
+#9. ARIMA or Box-Jenkins: The test shows the p-value is 0.09624 which is greater than 0.05. this means the data is not stationary. It will need one level of differencing. The model don't need seasonality component since the arima model does not show a significant seasonal lags. the possible ARIMA model include ARIMA(1,1,0), ARIMA(0,1,1), ARIMA(1,1,1). The ARIMA(1,0,0)(0,0,1)[12] has AIC=194.03, BIC=202.54, and Sigma^2=1.188. I will select ARIMA(1,0,0). The final formula is Xt = 15.5860 + 0.7671 Xt-1 - 0.3536Xt-2 + et
+adf.test(sales_ts) 
+diff_data <- diff(sales_ts)
+
+Acf(diff_data)
+Pacf(diff_data)
+
+fit_arima <- auto.arima(sales_ts)
+summary(fit_arima)
+
+arima_forecast <- forecast(fit_arima, h=12)
+plot(arima_forecast)
+
+#plot residual: it shows the residuals are spotted randomly around zero. it means the arima model capture the main patterns.
+plot(fit_arima$residuals,  main="Residuals of ARIMA", xlab="Residuals", ylab="Time")
+
+#histogram plot for residual: it shows the residuals approximately around zero with some skewness or outliers in one side.
+hist(fit_arima$residuals,  main="Histogram of Residuals", xlab="Residuals")
+
+#fitted values vs. residuals: the residuals are scattered around zero with no pattern but they clustered together. 
+plot(fitted(fit_arima), fit_arima$residuals, main="Fitted Values vs Residuals", xlab="Fitted Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#actual values vs. residuals:it shows that some clustering in some ranges of actual values.
+plot(sales_ts, fit_arima$residuals, main="Actual Values vs Residuals", xlab="Actual Values", ylab="Residuals")
+abline(h=0, col="red")
+
+#acf plot for residual: it shows most lags are in the confidence bounds. the residuals are mostly uncorrelated and this means the arima model capture the correlation in the data well. 
+Acf(fit_arima$residuals, main="ACF of Residuals")
+
+#forecast
+plot(arima_forecast)
+print(arima_forecast)
+plot(forecast(fit_arima, h=24))
+print(forecast(fit_arima, h=24))
+
+#5 measures of accuracy: the MAPE value of 5.04% shows that the forecasting error is low. And the residual analysis shows no significant autocorrelation, this means the model capture the patterns in the data well.
+accuracy(arima_forecast)
+```
+
+```{r}
+#10. Accuracy Summary: naive uses the most recent observation as the best predictor for the future values and it is useful for times series that has high randomness without having other patterns. Simple moving average use the average of the defined order observations to forecast the future values and it is useful to smooth the fluctuations with series with no clear patters. ets uses exponential smoothing with error, trends, and seasonality components and is useful for data that has patterns. holt-winters use level, trend, and seasonality to conduct exponential smoothing and its useful for data with strong seasonal patterns. ARIMA is a model use autoregressive, integrated, and moving average compenents and it is useful for both trend and non-seasonal data but has clear autocorrelation.
+accuracy_naive <- accuracy(naive_forecast)
+accuracy_ma <- accuracy(forecast_ma)
+accuracy_ets <- accuracy(ets_forecast)
+accuracy_hw <- accuracy(hw_pred)
+accuracy_arima <- accuracy(arima_forecast)
+
+#Best and Worst Forecast Method for Accuracy Measures: for ME, best method is ETS and worst is Holt-winters; for RMSE, best method is ARIMA and worst is Holt-winter; for MAE, best is ARIMA and worst is holt-winters; for MAPE, best is ARIMA and worst si holt-winters, for ACF1, best is Naive and worst is holt-winters.
+print(accuracy_naive)
+print(accuracy_ma)
+print(accuracy_ets)
+print(accuracy_hw)
+print(accuracy_arima)
+
+```
+
+```{r}
+#11. Conclusion: The times series of car sales shows a flucturation with a drop and been recovered after that. Then it is steady in recent years with a slightly upward trend. its seasonal patterns show that the data is predictable. The forecasts suggest that the value of car sales will increase over the next year and the following one. The ARIMA model ranks the higest for its accuracy and is capturing trends and patterns. After that ETS is the second good forecast model with a strong trend-seasonality model. The simple moving average smooth the patterns and the naive methods also shows a fine accuracy. However, the Holt-winters methods is not perform well might be it may not adapt well with the dataset's trend. After all, ARIMA model is the most reliable long-term forecasting model for this car sales dataset.
+```
+
